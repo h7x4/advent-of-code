@@ -8,6 +8,7 @@
     packages.${system} = {
       day01 = pkgs.callPackage ./day01 {};
       day02 = pkgs.callPackage ./day02 {};
+      day03 = pkgs.callPackage ./day03 {};
     };
   };
 }
