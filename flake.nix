@@ -6,9 +6,10 @@
     pkgs = nixpkgs.legacyPackages.${system};
   in {
     packages.${system} = {
-      day01 = pkgs.callPackage ./day01 {};
-      day02 = pkgs.callPackage ./day02 {};
-      day03 = pkgs.callPackage ./day03 {};
+      day01 = pkgs.callPackage ./day01 { };
+      day02 = pkgs.callPackage ./day02 { };
+      day03 = pkgs.callPackage ./day03 { };
+      day04 = pkgs.callPackage ./day04 { };
     };
   };
 }
