@@ -10,6 +10,7 @@
       day02 = pkgs.callPackage ./day02 { };
       day03 = pkgs.callPackage ./day03 { };
       day04 = pkgs.callPackage ./day04 { };
+      day05 = pkgs.callPackage ./day05 { };
     };
   };
 }
