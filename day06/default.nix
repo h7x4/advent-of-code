@@ -3,74 +3,47 @@
 with lib;
 
 let
-
   input = stringToCharacters (fileContents ./input.txt);
 
   foldl'' = f: l: let
     initial = take 2 l;
-  in foldl f (f (elemAt initial 0) (elemAt initial 1)) (drop 2 l);
+    base = f (elemAt initial 0) (elemAt initial 1);
+  in foldl f base (drop 2 l);
+
+  zipLists = ls: let 
+    minLength = foldl'' min (map length ls);
+
+    f = n: pipe ls [
+      (map (l: elemAt l n))
+      (imap0 (i: nameValuePair (toString i)))
+      listToAttrs
+    ];
+  in genList f minLength;
+
+  zipNSelfDrop1 = n: l: 
+    zipLists (map (i: drop i l) (range 0 (n - 1)));
 
   countUntil = pred: l: let
     innerCount = list: count:
       if pred (head list)
         then count
-        else innerCount (drop 1 list) (count + 1);
+        else innerCount (tail list) (count + 1);
   in innerCount l 0;
 
-  zip4ListsWith = f: fst: snd: trd: fth:
-    genList
-    (n: f (elemAt fst n) (elemAt snd n) (elemAt trd n) (elemAt fth n))
-    (pipe [fst snd trd fth] [
-      (map length)
-      (foldl'' min)
-    ]);
+  allItemsAreUnique = l: l == []
+                      || (!(elem (head l) (tail l))
+                         && allItemsAreUnique (tail l));
 
-  zip4Lists = fst: snd: trd: fth:
-    zip4ListsWith (fst: snd: trd: fth: { inherit fst snd trd fth; }) fst snd trd fth;
-
-  all4ItemsAreUnique = { fst, snd, trd, fth }: fst != snd
-                                            && fst != trd
-                                            && fst != fth
-                                            && snd != trd
-                                            && snd != fth
-                                            && trd != fth;
-
-  answer1 = pipe input [
-    (l: zip4Lists l (drop 1 l) (drop 2 l) (drop 3 l))
-    (countUntil all4ItemsAreUnique)
-    (add 4)
-    toString
-  ];
-
-  zipLists = lists: let 
-    minLength = (pipe lists [
-      (map length)
-      (foldl'' min)
-    ]);
-  in genList
-  (n: pipe lists [
-    (map (flip elemAt n))
-    (imap0 (i: nameValuePair (toString i)))
-    listToAttrs
-  ]) minLength;
-
-  zipNSelfWithOffset = n: offset: l: 
-    zipLists (map (i: drop (offset * i) l) (range 0 (n - 1)));
-
-  allItemsAreUnique = l:
-    if l == []
-      then true
-      else !(elem (head l) (drop 1 l))
-        && allItemsAreUnique (drop 1 l);
-
-  answer2 = pipe input [
-    (zipNSelfWithOffset 14 1)
+  answerN = n: pipe input [
+    (zipNSelfDrop1 n)
     (map attrValues)
     (countUntil allItemsAreUnique)
-    (add 14)
+    (add n)
     toString
   ];
 
+  answer1 = answerN 4;
+  answer2 = answerN 14;
 in pkgs.writeText "answers" ''
   Task1:
     ${answer1}
