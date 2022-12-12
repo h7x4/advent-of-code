@@ -1,39 +1,9 @@
-{ pkgs, lib }:
+{ pkgs, lib, AoCLib, ... }:
 
 with lib;
 
 let
-  # See https://github.com/NixOS/nixpkgs/pull/205457
-  toInt = str:
-    let
-      inherit (builtins) match fromJSON;
-      # RegEx: Match any leading whitespace, possibly a '-', one or more digits,
-      # and finally match any trailing whitespace.
-      strippedInput = match "[[:space:]]*(-?[[:digit:]]+)[[:space:]]*" str;
-
-      # RegEx: Match a leading '0' then one or more digits.
-      isLeadingZero = match "0[[:digit:]]+" (head strippedInput) == [];
-
-      # Attempt to parse input
-      parsedInput = fromJSON (head strippedInput);
-
-      generalError = "toInt: Could not convert ${escapeNixString str} to int.";
-
-      octalAmbigError = "toInt: Ambiguity in interpretation of ${escapeNixString str}"
-      + " between octal and zero padded integer.";
-
-    in
-      # Error on presence of non digit characters.
-      if strippedInput == null
-      then throw generalError
-      # Error on presence of leading zero/octal ambiguity.
-      else if isLeadingZero
-      then throw octalAmbigError
-      # Error if parse function fails.
-      else if !isInt parsedInput
-      then throw generalError
-      # Return result.
-      else parsedInput;
+  inherit (AoCLib) toInt repeat takeWithStride chunksOf;
 
   lineToInstruction = line:
     if line == "noop"
@@ -48,16 +18,11 @@ let
                         else { cycles = 2; X = nextX; nextX = nextX + instr.val; };
   in if instructions == [] then [] else [nextSignalState] ++ (foldToSignalState nextSignalState (tail instructions));
 
-  repeat = item: times: map (const item) (range 1 times);
-
   expandSignalStates = signalStates: let
     s = head signalStates;
   in if signalStates == []
        then []
        else (repeat s.X s.cycles) ++ (expandSignalStates (tail signalStates));
-
-  takeWithStride = n: l:
-    if l == [] then [] else [(head l)] ++ takeWithStride n (drop n l);
 
   signalStates = pipe ./input.txt [
     fileContents
@@ -75,14 +40,10 @@ let
     toString
   ];
 
-  splitAtInterval = n: list:
-    if list == [] then []
-                  else [(take n list)] ++ (splitAtInterval n (drop n list));
-
   f = i: v: if v <= i && i <= v + 2 then "#" else ".";
 
   answer2 = pipe signalStates [
-    (splitAtInterval 40)
+    (chunksOf 40)
     (map (imap1 f))
     (map (concatStringsSep ""))
     (concatStringsSep "\n")

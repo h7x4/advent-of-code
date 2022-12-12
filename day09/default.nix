@@ -1,19 +1,16 @@
-{ pkgs, lib }:
+{ pkgs, lib, AoCLib, ... }:
 
 with lib;
 
 let
+  inherit (AoCLib) scanl abs repeat cmp;
+
   mapDirectionStepsToHorizontalVertical = { direction, steps }: {
     horizontal = if direction == "L" then steps else
                  if direction == "R" then -steps else 0;
     vertical = if direction == "D" then steps else
                if direction == "U" then -steps else 0;
   };
-
-  scanl = f: x1: list: let
-    x2 = head list;
-    x1' = f x1 x2;
-  in if list == [] then [] else [x1'] ++ (scanl f x1' (tail list));
 
   foldHeadPosition =
     { x ? 0, y ? 0 }: 
@@ -31,20 +28,14 @@ let
     (scanl foldHeadPosition {})
   ];
 
-  abs = x: if x < 0 then -x else x;
-
   ropePieceLength = headPiece: tailPiece: let
     deltaX = abs (headPiece.x - tailPiece.x);
     deltaY = abs (headPiece.y - tailPiece.y);
   in max deltaX deltaY;
 
   moveRopePiece = headPiece: tailPiece: {
-    x = if headPiece.x > tailPiece.x then tailPiece.x + 1 else
-        if headPiece.x < tailPiece.x then tailPiece.x - 1 else 
-                                          tailPiece.x;
-    y = if headPiece.y > tailPiece.y then tailPiece.y + 1 else
-        if headPiece.y < tailPiece.y then tailPiece.y - 1 else 
-                                          tailPiece.y;
+    x = tailPiece.x + (cmp headPiece.x tailPiece.x);
+    y = tailPiece.y + (cmp headPiece.y tailPiece.y);
   };
 
   moveRope = headToOverlap: rope: let
@@ -68,8 +59,6 @@ let
          inherit (nextIteration) rope;
          tailPositions = [(last newRope)] ++ nextIteration.tailPositions;
         };
-
-  repeat = item: times: map (const item) (range 1 times);
 
   f = n: { rope ? (repeat { x = 0; y = 0; } n), tailPositions ? [{ x = 0; y = 0; }] }: newHeadPosition: let
     newRope = moveRopeUntilHeadOverlapsAndReportLastPositions newHeadPosition rope;

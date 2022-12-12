@@ -1,8 +1,10 @@
-{ pkgs, lib }:
+{ pkgs, lib, AoCLib, ... }:
 
 with lib;
 
 let
+  inherit (AoCLib) transformRange chunksOf;
+
   compartments = pipe (fileContents ./input.txt) [
     (splitString "\n")
   ];
@@ -11,15 +13,15 @@ let
     c1 = substring 0 ((stringLength s) / 2) s;
     c2 = substring ((stringLength s) / 2) (stringLength s) s;
   };
+
   charsToSet = s: foldl (set: c: set // { ${c} = true; }) { } (stringToCharacters s);
+
   getCommonChar = { c1, c2 }:
     findSingle
       (c: c2.${c} or false)
       "Error: no common chars"
       "Error: multiple chars"
       (attrNames c1);
-  mapRange = min: max: f: i: if min <= i && i < max then f i else i;
-  transformRange = min: max: offset: i: mapRange min max (x: x + offset) i;
 
   charValue = c: pipe c [
     lib.strings.charToInt
@@ -36,14 +38,12 @@ let
     toString
   ];
 
-  chunksOf = n: l: if length l <= n
-                     then [l]
-                     else [(take n l)] ++ (chunksOf n (drop n l));
   toA123 = l: {
     a1 = elemAt l 0;
     a2 = elemAt l 1;
     a3 = elemAt l 2;
   };
+
   getCommonChar2 = { a1, a2, a3 }:
     findSingle
       (c: a2.${c} or false && a3.${c} or false)

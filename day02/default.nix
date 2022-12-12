@@ -10,11 +10,13 @@ let
   ];
 
   inherentValue = x: { A = 1; B = 2; C = 3; }.${x};
+
   comparativeValue = { they, you }: if they == you then 3 else
                                     if (they == "A" && you == "B")
                                     || (they == "B" && you == "C")
                                     || (they == "C" && you == "A") then 6 else
                                     0;
+
   score = match: comparativeValue match + inherentValue match.you;
 
   equalizeValueType = x: { X = "A"; Y = "B"; Z = "C"; }.${x};
@@ -31,7 +33,9 @@ let
     Y = { A = 1; B = 2; C = 3; };
     Z = { A = 2; B = 3; C = 1; };
   }.${you}.${they};
+
   comparativeValue2 = x: { X = 0; Y = 3; Z = 6; }.${x};
+
   score2 = match: comparativeValue2 match.you + inherentValue2 match;
 
   answer2 = pipe guide [

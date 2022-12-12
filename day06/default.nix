@@ -1,8 +1,10 @@
-{ pkgs, lib }:
+{ pkgs, lib, AoCLib, ... }:
 
 with lib;
 
 let
+  inherit (AoCLib) allUnique;
+
   countWithNUntil = n: pred: list: let
     inner = list': count:
       if pred (take n list')
@@ -10,13 +12,10 @@ let
         else inner (tail list') (count + 1);
   in inner list 0;
 
-  allItemsAreUnique = l: l == []
-    || !(elem (head l) (tail l)) && allItemsAreUnique (tail l);
-
   answerN = n: pipe ./input.txt [
     fileContents
     stringToCharacters
-    (countWithNUntil n allItemsAreUnique)
+    (countWithNUntil n allUnique)
     (add n)
     toString
   ];

@@ -1,8 +1,10 @@
-{ pkgs, lib }:
+{ pkgs, lib, AoCLib, ... }:
 
 with lib;
 
 let
+  inherit (AoCLib) transpose countWhile multiply;
+
   calculateTreeVisibilityForLine = line: let
     updateState = { currentMax ? (-1), trees ? [] }: tree:
       if tree > currentMax then { currentMax = tree; trees = trees ++ [true]; }
@@ -10,9 +12,6 @@ let
     forwards = (foldl updateState { } line).trees;
     backwards = reverseList (foldr (flip updateState) { } line).trees;
   in zipListsWith or forwards backwards;
-
-  transpose = grid: 
-    genList (n: map ((flip elemAt) n) grid) (length grid);
 
   combineGridsWith = f: grid1: grid2: let
     height = length grid1;
@@ -88,13 +87,13 @@ let
       visibleDistanceBackwards 
       reverseList
     ];
-  in zipListsWith (x: y: x * y) forwards backwards;
+  in zipListsWith multiply forwards backwards;
 
   answer2 = pipe trees [
     (lines: { horizontal = lines; vertical = transpose lines; })
     (mapAttrs (_: map visibleDistanceHorizontal))
     ({horizontal, vertical}: { inherit horizontal; vertical = transpose vertical; })
-    ({horizontal, vertical}: combineGridsWith (x: y: x * y) horizontal vertical)
+    ({horizontal, vertical}: combineGridsWith multiply horizontal vertical)
     (map (foldr max 0))
     (foldr max 0)
     toString
