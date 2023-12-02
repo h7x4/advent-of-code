@@ -7,6 +7,7 @@
   in {
     packages.${system} = {
       day01 = pkgs.callPackage ./day01 { };
+      day02 = pkgs.callPackage ./day02 { };
     };
   };
 }
